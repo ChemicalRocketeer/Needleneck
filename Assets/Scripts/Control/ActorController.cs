@@ -17,10 +17,10 @@ public class ActorController : Interactable {
 	}
 
 	void Start() {
+		startPosition = transform.position;
 		if (simulateOnStart) {
 			BeginSimulation();
 		}
-		startPosition = transform.position;
 	}
 
 	void Update() {
