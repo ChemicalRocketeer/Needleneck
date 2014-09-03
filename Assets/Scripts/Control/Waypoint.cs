@@ -5,16 +5,6 @@ public class Waypoint : Interactable {
 
 	public ActorController actorController;
 
-	private MeshRenderer renderer;
-
-	void Start() {
-		renderer = GetComponent<MeshRenderer>();
-	}
-
-	public void SetVisibile(bool visible) {
-		renderer.enabled = visible;
-	}
-
 	public override void OnClick()
 	{
 	}

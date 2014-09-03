@@ -37,7 +37,7 @@ public class ActorController : Interactable {
 
 			waypointLines.SetPosition(0, transform.position);
 			if (Utils.Vec3to2(transform.position) == targetPosition) { // at waypoint
-				waypoints[targetWaypoint].SetVisibile(false);
+				waypoints[targetWaypoint].renderer.enabled = false;
 				targetWaypoint += 1;
 				int lineVertexCount = GetLineVertexCount();
 				if (targetWaypoint <= waypoints.Count) {
