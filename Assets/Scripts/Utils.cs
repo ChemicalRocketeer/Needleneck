@@ -19,6 +19,10 @@ public class Utils {
 		return Vec2to3(v);
 	}
 
+	public static float AngleOf(Vector2 v) {
+		return Mathf.Atan2(v.y, v.x);
+	}
+
 	public static void LookAt2D(Transform transform, Vector2 target) {
 		Vector2 dir = target - Vec3to2(transform.position);
 		float angle = Mathf.Atan2(dir.y,dir.x) * Mathf.Rad2Deg;

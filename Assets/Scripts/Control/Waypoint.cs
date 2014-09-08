@@ -24,6 +24,6 @@ public class Waypoint : Interactable {
 	public override void OnDrag(Vector2 distance)
 	{
 		transform.Translate(Utils.Vec2to3(distance));
-		actorController.UpdateWaypointLines(this);
+		actorController.UpdateWaypointLine(this);
 	}
 }
