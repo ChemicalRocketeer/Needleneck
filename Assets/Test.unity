@@ -170,11 +170,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e6f372e2674fbf48875765f6e3b5523, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerID: 0
   selected: {fileID: 2090632277}
   interactableMask:
     serializedVersion: 2
     m_Bits: 4294967295
   modelWaypoint: {fileID: 11400000, guid: 96d7245b8896db14bae9711cf4d930d1, type: 2}
+  normalTimeScale: 1
+  slowTimeScale: .200000003
 --- !u!1 &427813111
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,7 +189,7 @@ GameObject:
   - 33: {fileID: 427813114}
   - 23: {fileID: 427813113}
   - 65: {fileID: 427813112}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -240,7 +243,7 @@ Transform:
   m_GameObject: {fileID: 427813111}
   m_LocalRotation: {x: 0, y: 0, z: -.707106829, w: .707106829}
   m_LocalPosition: {x: 12.5672894, y: -.464708567, z: -.5}
-  m_LocalScale: {x: 8, y: .5, z: 2}
+  m_LocalScale: {x: 8, y: 5.41249847, z: 2}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
@@ -274,14 +277,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40a94e217d288f348b2abe53e6fbb684, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerID: 0
   startPosition: {x: 0, y: 0, z: 0}
   speed: 5
+  hitRadius: .5
   wallMask:
     serializedVersion: 2
-    m_Bits: 4294967007
-  hitRadius: .5
-  runningSim: 0
+    m_Bits: 512
   waypointLines: {fileID: 1274223824}
+  deadModel: {fileID: 100000, guid: 673ef21b694e072408489f58dd860182, type: 2}
+  runningSim: 0
 --- !u!23 &1013434487
 Renderer:
   m_ObjectHideFlags: 0
@@ -345,7 +350,7 @@ GameObject:
   - 33: {fileID: 1108665683}
   - 23: {fileID: 1108665681}
   - 65: {fileID: 1108665682}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -475,7 +480,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 1274223825}
   - 120: {fileID: 1274223824}
-  m_Layer: 8
+  m_Layer: 5
   m_Name: Lines
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -526,6 +531,90 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1013434490}
   m_RootOrder: 0
+--- !u!1 &1765648288
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1765648292}
+  - 33: {fileID: 1765648291}
+  - 65: {fileID: 1765648290}
+  - 23: {fileID: 1765648289}
+  - 114: {fileID: 1765648293}
+  m_Layer: 0
+  m_Name: BulletSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &1765648289
+Renderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1765648288}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_LightmapIndex: 255
+  m_LightmapTilingOffset: {x: 1, y: 1, z: 0, w: 0}
+  m_Materials:
+  - {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  m_SubsetIndices: 
+  m_StaticBatchRoot: {fileID: 0}
+  m_UseLightProbes: 0
+  m_LightProbeAnchor: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+--- !u!65 &1765648290
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1765648288}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!33 &1765648291
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1765648288}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1765648292
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1765648288}
+  m_LocalRotation: {x: 0, y: 0, z: .147925183, w: .988998592}
+  m_LocalPosition: {x: -13.8659573, y: -9.60091686, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+--- !u!114 &1765648293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1765648288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6a581ec5a5244e428c6f4e5b2edd79c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bullet: {fileID: 11400000, guid: e9bab8514ace1ac46adaa173315927ce, type: 2}
+  bulletSpeed: 200
+  spawnInterval: 1
 --- !u!1 &1916236561
 GameObject:
   m_ObjectHideFlags: 0
@@ -535,7 +624,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 1916236563}
   - 120: {fileID: 1916236562}
-  m_Layer: 8
+  m_Layer: 5
   m_Name: Lines
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -668,11 +757,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40a94e217d288f348b2abe53e6fbb684, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerID: 0
   startPosition: {x: 0, y: 0, z: 0}
   speed: 5
+  hitRadius: .5
   wallMask:
     serializedVersion: 2
-    m_Bits: 4294967007
-  hitRadius: .5
-  runningSim: 0
+    m_Bits: 512
   waypointLines: {fileID: 1916236562}
+  deadModel: {fileID: 100000, guid: 673ef21b694e072408489f58dd860182, type: 2}
+  runningSim: 0

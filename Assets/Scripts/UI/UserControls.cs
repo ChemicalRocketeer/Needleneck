@@ -3,12 +3,22 @@ using System.Collections;
 
 public class UserControls : MonoBehaviour {
 
+	public int playerID = 0;
 	public ActorController selected;
 	public LayerMask interactableMask;
 
 	public Waypoint modelWaypoint;
 
-	private bool runningSim = false;
+	public float normalTimeScale = 1f;
+	public float slowTimeScale = .2f;
+
+	private SimulationState simState;
+
+	public enum SimulationState {
+		PLANNING_MODE,
+		RUNNING,
+		PAUSED
+	}
 
 	void Update () {
 
@@ -23,13 +33,14 @@ public class UserControls : MonoBehaviour {
 			Ray ray = new Ray(rayOrigin, Vector3.forward);
 			RaycastHit hit;
 			
-			if (Physics.Raycast(ray, out hit, Mathf.Infinity, interactableMask)) { 				// interact with something
+			if (Physics.Raycast(ray, out hit, Mathf.Infinity, interactableMask)) { 
+				// interact with something
 				ActorController actor = hit.transform.GetComponent<ActorController>();
 				if (actor != null) {
 					actor.OnClick();
 					selected = actor;
 				}
-			} else { 																			// create a waypoint
+			} else { // create a waypoint
 				Waypoint waypoint = (Waypoint) Instantiate(modelWaypoint, groundPoint, Quaternion.identity);
 				waypoint.actorController = selected;
 				waypoint.transform.position = new Vector3(waypoint.transform.position.x, waypoint.transform.position.y, selected.transform.position.z);
@@ -38,7 +49,7 @@ public class UserControls : MonoBehaviour {
 		}
 
 		if (Input.GetKeyDown("backspace")) {
-			if (runningSim) {
+			if (simState != SimulationState.PLANNING_MODE) {
 				ResetSimulation();
 			} else {
 				selected.RemoveWaypoint();
@@ -47,20 +58,37 @@ public class UserControls : MonoBehaviour {
 		if (Input.GetKeyDown("space")) {
 			ToggleSimulation();
 		}
+		if (Input.GetKeyDown("f2")) {
+			ToggleSlowTime();
+		}
 	}
 
 	public void ToggleSimulation() {
-		runningSim = !runningSim;
+		bool runningSim = false;
+		if (simState != SimulationState.RUNNING) {
+			runningSim = true;
+			simState = SimulationState.RUNNING;
+		} else {
+			simState = SimulationState.PAUSED;
+		}
 		foreach (ActorController c in ActorController.instances) {
 			c.runningSim = runningSim;
 		}
 	}
 
 	public void ResetSimulation() {
-		runningSim = false;
+		simState = SimulationState.PLANNING_MODE;
 		foreach (ActorController c in ActorController.instances) {
-			c.runningSim = runningSim;
+			c.runningSim = false;
 			c.ResetSimulation();
+		}
+	}
+
+	public void ToggleSlowTime() {
+		if (Time.timeScale == normalTimeScale) {
+			Time.timeScale = slowTimeScale;
+		} else {
+			Time.timeScale = normalTimeScale;
 		}
 	}
 }

@@ -1,0 +1,27 @@
+﻿using UnityEngine;
+using System.Collections;
+
+public class Bullet : MonoBehaviour {
+
+	public Vector2 velocity;
+	public float radius = 1f;
+	public LayerMask collisionMask;
+	public GameObject source;
+
+	void Update() {
+		Vector3 movement = Utils.Vec2to3(velocity * Time.deltaTime);
+		
+		RaycastHit hit;
+		if (Physics.SphereCast(transform.position, radius, movement.normalized, out hit, movement.magnitude, collisionMask)) {
+			movement = hit.point - transform.position;
+			velocity = Vector2.zero;
+			//GameObject.Destroy(gameObject);
+			ActorController ac = hit.collider.GetComponent<ActorController>();
+			if (ac) {
+				ac.Kill(source);
+			}
+		}
+		 
+		transform.position = transform.position + movement;
+	}
+}

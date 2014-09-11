@@ -5,14 +5,19 @@ public class ActorController : Interactable {
 
 	public static IList<ActorController> instances = new List<ActorController>();
 
+	public int playerID;
 	public Vector3 startPosition;
 	public float speed = 1f;
-	public LayerMask wallMask;
 	public float hitRadius = 1f;
-	
-	public bool runningSim = false;
-
+	public LayerMask wallMask;
 	public LineRenderer waypointLines;
+	public GameObject deadModel;
+
+	public bool runningSim = false;
+	private bool alive = true;
+	public bool Alive {
+		get { return alive; }
+	}
 
 	private IList<Waypoint> waypoints = new List<Waypoint>();
 	private int targetWaypoint = 0;
@@ -28,29 +33,21 @@ public class ActorController : Interactable {
 			// we are moving along waypoints
 			Vector2 targetPosition = Utils.Vec3to2(waypoints[targetWaypoint].transform.position);
 			Vector2 distance = targetPosition - Utils.Vec3to2(transform.position);
-			Vector2 movement = distance.normalized * speed * Time.deltaTime;
+			Vector3 movement = Utils.Vec2to3(distance.normalized * speed * Time.deltaTime);
 
+			transform.LookAt(new Vector3(targetPosition.x, targetPosition.y, transform.position.z), transform.up);
+			Debug.DrawRay(transform.position, transform.up);
 			if (distance.magnitude < movement.magnitude) {
 				// prevent going past the waypoint
 				transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
 			} else {
 				// prevent running through walls
-				/*
-				RaycastHit2D boxCast = Physics2D.BoxCast(
-					Utils.Vec3to2(transform.position), 
-					hitboxSize, 
-					Vector2.Angle(Utils.Vec3to2(transform.position), movement), 
-					movement.normalized, 
-					movement.magnitude, 
-					wallMask);
-				*/
 				RaycastHit hit;
 				if (Physics.SphereCast(transform.position, hitRadius, movement.normalized, out hit, movement.magnitude, wallMask)) {
-					movement = Vector2.zero;
+					movement = hit.point - transform.position;
 				}
-				transform.position = transform.position + Utils.Vec2to3(movement);
+				transform.position = transform.position + movement;
 			}
-			transform.LookAt(Utils.Vec2to3(targetPosition), Vector3.back);
 
 			if (Utils.Vec3to2(transform.position) == targetPosition) { // at waypoint
 				waypoints[targetWaypoint].renderer.enabled = false;
@@ -96,6 +93,8 @@ public class ActorController : Interactable {
 	}
 
 	public void ResetSimulation() {
+		alive = true;
+		gameObject.SetActive(true);
 		transform.position = startPosition;
 		targetWaypoint = 0;
 		waypointLines.SetVertexCount(waypoints.Count + 1);
@@ -108,6 +107,12 @@ public class ActorController : Interactable {
 	
 	public void UpdateWaypointLine(Waypoint w) {
 		UpdateWaypointLine(waypoints.IndexOf(w));
+	}
+
+	public void Kill(GameObject killer) {
+		alive = false;
+		gameObject.SetActive(false);
+		Instantiate(deadModel, transform.position, transform.rotation);
 	}
 
 	/// <summary>
