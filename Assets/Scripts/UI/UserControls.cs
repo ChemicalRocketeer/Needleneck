@@ -12,9 +12,9 @@ public class UserControls : MonoBehaviour {
 	public float normalTimeScale = 1f;
 	public float slowTimeScale = .2f;
 
-	private SimulationState simState;
+	private SimulationStates simState;
 
-	public enum SimulationState {
+	public enum SimulationStates {
 		PLANNING_MODE,
 		RUNNING,
 		PAUSED
@@ -24,7 +24,7 @@ public class UserControls : MonoBehaviour {
 
 		if (Input.GetMouseButtonDown(0)) {
 
-			if (!selected.Alive) {
+			if (selected.simState == ActorController.SimStates.DEAD) {
 				selected = ResolveDeadSelectedActor(ActorController.instances.IndexOf(selected));
 			}
 
@@ -53,7 +53,7 @@ public class UserControls : MonoBehaviour {
 		}
 
 		if (Input.GetKeyDown("backspace")) {
-			if (simState != SimulationState.PLANNING_MODE) {
+			if (simState != SimulationStates.PLANNING_MODE) {
 				ResetSimulation();
 			} else {
 				selected.RemoveWaypoint();
@@ -69,11 +69,11 @@ public class UserControls : MonoBehaviour {
 
 	public void ToggleSimulation() {
 		bool runningSim = false;
-		if (simState != SimulationState.RUNNING) {
+		if (simState != SimulationStates.RUNNING) {
 			runningSim = true;
-			simState = SimulationState.RUNNING;
+			simState = SimulationStates.RUNNING;
 		} else {
-			simState = SimulationState.PAUSED;
+			simState = SimulationStates.PAUSED;
 		}
 		foreach (ActorController c in ActorController.instances) {
 			c.runningSim = runningSim;
@@ -81,7 +81,7 @@ public class UserControls : MonoBehaviour {
 	}
 
 	public void ResetSimulation() {
-		simState = SimulationState.PLANNING_MODE;
+		simState = SimulationStates.PLANNING_MODE;
 		foreach (ActorController c in ActorController.instances) {
 			c.runningSim = false;
 			c.ResetSimulation();
@@ -100,7 +100,7 @@ public class UserControls : MonoBehaviour {
 		int i = (index + 1) % ActorController.instances.Count;
 		while (i != index) {
 			ActorController next = ActorController.instances[i];
-			if (next.Alive) return next;
+			if (next.simState != ActorController.SimStates.DEAD) return next;
 			i = (index + 1) % ActorController.instances.Count;
 		}
 		return ActorController.instances[index];

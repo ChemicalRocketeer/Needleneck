@@ -29,9 +29,9 @@ public class Utils {
 		return Vec2to3(v);
 	}
 
-	/// <returns>The angle of the given vector, in radians</returns>
+	/// <returns>The angle of the given vector, in radians. This is always between 0 and 2pi</returns>
 	public static float AngleOf(Vector2 v) {
-		return Mathf.Atan2(v.y, v.x);
+		return Mathf.Atan2(v.y, v.x) % (2 * Mathf.PI);
 	}
 
 	public static void LookAt2D(Transform transform, Vector2 target) {

@@ -11,21 +11,30 @@ public class ActorController : Interactable {
 	public float speed = 1f;
 	public float hitRadius = 1f;
 	public float fieldOfView = 60f;
-	public float viewRange = 5f;
+	public float range = 5f;
+	public float aimTime = 0.2f;
 
+	public LayerMask targetMask;
 	public LayerMask wallMask;
 	public LineRenderer waypointLines;
 	public LineRenderer fovLines;
 	public GameObject deadModel;
+	public Bullet bullet;
 
 	public bool runningSim = false;
-	private bool alive = true;
-	public bool Alive {
-		get { return alive; }
-	}
 
 	private IList<Waypoint> waypoints = new List<Waypoint>();
 	private int targetWaypoint = 0;
+
+	public SimStates simState = SimStates.WALKING;
+	public enum SimStates {
+		WALKING,
+		FIRING,
+		DEAD
+	}
+
+	private float aimStartTime = 0f;
+	private ActorController target;
 
 	void Start() {
 		instances.Add(this);
@@ -37,40 +46,44 @@ public class ActorController : Interactable {
 	void Update() {
 		// setup fieldOfView lines
 		float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
-		Vector2 fovPointLeft = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) + fovMod, viewRange);
-		Vector2 fovPointRight = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) - fovMod, viewRange);
+		Vector2 fovPointLeft = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) + fovMod, range);
+		Vector2 fovPointRight = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) - fovMod, range);
 		fovLines.SetPosition(0, transform.position + Utils.Vec2to3(fovPointLeft));
 		fovLines.SetPosition(1, transform.position);
 		fovLines.SetPosition(2, transform.position + Utils.Vec2to3(fovPointRight));
 
-		if (runningSim && targetWaypoint < waypoints.Count) {
-			// move along waypoints
-			Vector2 targetPosition = Utils.Vec3to2(waypoints[targetWaypoint].transform.position);
-			Vector2 distance = targetPosition - Utils.Vec3to2(transform.position);
-			Vector3 movement = Utils.Vec2to3(distance.normalized * speed * Time.deltaTime);
+		if (runningSim) {
 
-			Utils.LookAt2D(transform, targetPosition);
+			if (simState == SimStates.FIRING) {
 
+			} else if (targetWaypoint < waypoints.Count) {
+				// move along waypoints
+				Vector2 targetPosition = Utils.Vec3to2(waypoints[targetWaypoint].transform.position);
+				Vector2 distance = targetPosition - Utils.Vec3to2(transform.position);
+				Vector3 movement = Utils.Vec2to3(distance.normalized * speed * Time.deltaTime);
 
-			if (distance.magnitude < movement.magnitude) {
-				// prevent going past the waypoint
-				transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
-			} else {
-				// prevent running through walls
-				RaycastHit hit;
-				if (Physics.SphereCast(transform.position, hitRadius, movement.normalized, out hit, movement.magnitude, wallMask)) {
-					movement = hit.point - transform.position;
+				Utils.LookAt2D(transform, targetPosition);
+
+				if (distance.magnitude < movement.magnitude) {
+					// prevent going past the waypoint
+					transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
+				} else {
+					// prevent running through walls
+					RaycastHit hit;
+					if (Physics.SphereCast(transform.position, hitRadius, movement.normalized, out hit, movement.magnitude, wallMask)) {
+						movement = hit.point - transform.position;
+					}
+					transform.position = transform.position + movement;
 				}
-				transform.position = transform.position + movement;
-			}
 
-			if (Utils.Vec3to2(transform.position) == targetPosition) { // at waypoint
-				waypoints[targetWaypoint].renderer.enabled = false;
-				targetWaypoint += 1;
-				int lineVertexCount = GetWaypointLineVertexCount();
-				waypointLines.SetVertexCount(lineVertexCount);
-				for (int i = targetWaypoint; i < waypoints.Count; i++) {
-					UpdateWaypointLine(i);
+				if (Utils.Vec3to2(transform.position) == targetPosition) { // at waypoint
+					waypoints[targetWaypoint].renderer.enabled = false;
+					targetWaypoint += 1;
+					int lineVertexCount = GetWaypointLineVertexCount();
+					waypointLines.SetVertexCount(lineVertexCount);
+					for (int i = targetWaypoint; i < waypoints.Count; i++) {
+						UpdateWaypointLine(i);
+					}
 				}
 			}
 		}
@@ -108,7 +121,7 @@ public class ActorController : Interactable {
 	}
 
 	public void ResetSimulation() {
-		alive = true;
+		simState = SimStates.WALKING;
 		gameObject.SetActive(true);
 		transform.position = startPosition;
 		transform.rotation = startRotation;
@@ -128,12 +141,21 @@ public class ActorController : Interactable {
 	}
 
 	public void Kill(GameObject killer) {
-		alive = false;
+		simState = SimStates.DEAD;
 		gameObject.SetActive(false);
 		foreach (Waypoint w in waypoints) {
 			w.gameObject.SetActive(false);
 		}
 		Instantiate(deadModel, transform.position, transform.rotation);
+	}
+
+	private ActorController FindTarget() {
+		Collider[] colliders = Physics.OverlapSphere(transform.position, range, targetMask);
+		foreach (Collider c in colliders) {
+			Vector2 otherPos = Utils.Vec3to2(c.transform.position);
+			float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
+			float myAngle = Utils.AngleOf(Utils.Vec3to2(transform.right));
+		}
 	}
 
 	/// <summary>
