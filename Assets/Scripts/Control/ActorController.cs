@@ -5,21 +5,23 @@ public class ActorController : Interactable {
 
 	public static IList<ActorController> instances = new List<ActorController>();
 
-	public int playerID;
+	public int teamID;
 	public Vector3 startPosition;
 	public Quaternion startRotation;
 	public float speed = 1f;
+
 	public float hitRadius = 1f;
 	public float fieldOfView = 60f;
 	public float range = 5f;
 	public float aimTime = 0.2f;
+	public float bulletSpeed = 100f;
+	public Bullet bullet;
 
 	public LayerMask targetMask;
 	public LayerMask wallMask;
 	public LineRenderer waypointLines;
 	public LineRenderer fovLines;
 	public GameObject deadModel;
-	public Bullet bullet;
 
 	public bool runningSim = false;
 
@@ -33,18 +35,19 @@ public class ActorController : Interactable {
 		DEAD
 	}
 
-	private float aimStartTime = 0f;
+	private float aimTimeCounter = 0f;
 	private ActorController target;
+	private GameObject deadSelf;
 
 	void Start() {
 		instances.Add(this);
 		startPosition = transform.position;
 		startRotation = transform.rotation;
 		waypointLines.SetPosition(0, transform.position);
+		fovLines.SetVertexCount(3);
 	}
 
 	void Update() {
-		FindTarget();
 
 		// setup fieldOfView lines
 		float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
@@ -54,11 +57,24 @@ public class ActorController : Interactable {
 		fovLines.SetPosition(1, transform.position);
 		fovLines.SetPosition(2, transform.position + Utils.Vec2to3(fovPointRight));
 
-		if (runningSim) {
+		if (runningSim && simState != SimStates.DEAD) {
+			// aim and stuff
+			target = FindTarget();
+			if (target != null) {
+				simState = SimStates.FIRING;
+				Utils.LookAt2D(transform, Utils.Vec3to2(target.transform.position));
+				aimTimeCounter += Time.deltaTime;
+				if (aimTimeCounter >= aimTime) {
+					FireBullet();
+					aimTimeCounter = 0;
+				}
+			} else {
+				simState = SimStates.WALKING;
+				aimTimeCounter = 0;
+				target = null;
+			}
 
-			if (simState == SimStates.FIRING) {
-
-			} else if (targetWaypoint < waypoints.Count) {
+			if (simState == SimStates.WALKING && targetWaypoint < waypoints.Count) {
 				// move along waypoints
 				Vector2 targetPosition = Utils.Vec3to2(waypoints[targetWaypoint].transform.position);
 				Vector2 distance = targetPosition - Utils.Vec3to2(transform.position);
@@ -130,6 +146,7 @@ public class ActorController : Interactable {
 		targetWaypoint = 0;
 		waypointLines.SetVertexCount(waypoints.Count + 1);
 		waypointLines.SetPosition(0, transform.position);
+		GameObject.Destroy(deadSelf);
 		for (int i = 0; i < waypoints.Count; i++) {
 			Waypoint w = waypoints[i];
 			w.renderer.enabled = true;
@@ -142,18 +159,24 @@ public class ActorController : Interactable {
 		UpdateWaypointLine(waypoints.IndexOf(w));
 	}
 
+	public void FireBullet() {
+		Bullet b = (Bullet) Instantiate(bullet, transform.position, Quaternion.identity);
+		b.velocity = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)), bulletSpeed);
+		b.teamID = teamID;
+	}
+
 	public void Kill(GameObject killer) {
 		simState = SimStates.DEAD;
 		gameObject.SetActive(false);
 		foreach (Waypoint w in waypoints) {
 			w.gameObject.SetActive(false);
 		}
-		Instantiate(deadModel, transform.position, transform.rotation);
+		deadSelf = (GameObject) Instantiate(deadModel, transform.position, transform.rotation);
 	}
 
-	public bool CanShoot(ActorController ac) {
-		if (ac == null) return false;
-		Vector2 otherPos = Utils.Vec3to2(ac.transform.position - transform.position);
+	public bool InFOV(Transform target) {
+		if (target == null) return false;
+		Vector2 otherPos = Utils.Vec3to2(target.transform.position - transform.position);
 		float otherAngle = Utils.AngleOf(otherPos) * Mathf.Rad2Deg;
 		float fovMod = fieldOfView * 0.5f;
 		float myAngle = Utils.AngleOf(transform.right) * Mathf.Rad2Deg;
@@ -161,11 +184,28 @@ public class ActorController : Interactable {
 	}
 
 	private ActorController FindTarget() {
+		// check if there is an existing actor that can be fired at
+		if (target != null && target.simState != SimStates.DEAD) {
+			Vector3 dist = target.transform.position - transform.position;
+			if (dist.magnitude <= range && InFOV(target.transform)) {
+				Ray ray = new Ray(transform.position, dist.normalized);
+				if (!Physics.Raycast(ray, dist.magnitude, wallMask)) {
+					return target;
+				}
+			}
+		}
+		// look for a new actor
 		Collider[] colliders = Physics.OverlapSphere(transform.position, range, targetMask);
 		foreach (Collider c in colliders) {
-			ActorController actor = c.GetComponent<ActorController>();
-			if (CanShoot(actor)) {
-				return actor;
+			if (c != this.collider) {
+				ActorController actor = c.GetComponent<ActorController>();
+				if (actor.teamID != teamID && actor.simState != SimStates.DEAD && InFOV(actor.transform)) {
+					Vector3 dist = c.transform.position - transform.position;
+					Ray ray = new Ray(transform.position, dist.normalized);
+					if (!Physics.Raycast(ray, dist.magnitude, wallMask)) {
+						return actor;
+					}
+				}
 			}
 		}
 		return null;
@@ -206,5 +246,14 @@ public class ActorController : Interactable {
 	
 	public override void OnDrag(Vector2 draggedTo)
     {
+	}
+
+	public void OnDrawGizmos() {
+		// setup fieldOfView lines
+		float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
+		Vector2 fovPointLeft = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) + fovMod, range);
+		Vector2 fovPointRight = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) - fovMod, range);
+		Gizmos.DrawLine(transform.position, transform.position + Utils.Vec2to3(fovPointLeft));
+		Gizmos.DrawLine(transform.position, transform.position + Utils.Vec2to3(fovPointRight));
 	}
 }

@@ -111,11 +111,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7841e4e4806bf7e4d8c33727e48765a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  velocity: {x: 191.247253, y: 58.5191193}
+  velocity: {x: 0, y: 0}
   radius: .00999999978
   collisionMask:
     serializedVersion: 2
     m_Bits: 768
+  source: {fileID: 0}
+  teamID: 0
 --- !u!135 &13500000
 SphereCollider:
   m_ObjectHideFlags: 1

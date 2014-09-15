@@ -7,6 +7,7 @@ public class Bullet : MonoBehaviour {
 	public float radius = 1f;
 	public LayerMask collisionMask;
 	public GameObject source;
+	public int teamID;
 
 	void Update() {
 		Vector3 movement = Utils.Vec2to3(velocity * Time.deltaTime);
@@ -17,7 +18,7 @@ public class Bullet : MonoBehaviour {
 			velocity = Vector2.zero;
 			//GameObject.Destroy(gameObject);
 			ActorController ac = hit.collider.GetComponent<ActorController>();
-			if (ac) {
+			if (ac && ac.teamID != teamID) {
 				ac.Kill(source);
 			}
 		}
