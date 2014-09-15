@@ -24,6 +24,10 @@ public class UserControls : MonoBehaviour {
 
 		if (Input.GetMouseButtonDown(0)) {
 
+			if (!selected.Alive) {
+				selected = ResolveDeadSelectedActor(ActorController.instances.IndexOf(selected));
+			}
+
 			Vector3 groundPoint = Input.mousePosition;
 			groundPoint.z = -Camera.main.transform.position.z;
 			groundPoint = Camera.main.ScreenToWorldPoint(groundPoint);
@@ -32,7 +36,7 @@ public class UserControls : MonoBehaviour {
 			rayOrigin.z = Camera.main.transform.position.z;
 			Ray ray = new Ray(rayOrigin, Vector3.forward);
 			RaycastHit hit;
-			
+
 			if (Physics.Raycast(ray, out hit, Mathf.Infinity, interactableMask)) { 
 				// interact with something
 				ActorController actor = hit.transform.GetComponent<ActorController>();
@@ -90,5 +94,15 @@ public class UserControls : MonoBehaviour {
 		} else {
 			Time.timeScale = normalTimeScale;
 		}
+	}
+
+	private ActorController ResolveDeadSelectedActor(int index) {
+		int i = (index + 1) % ActorController.instances.Count;
+		while (i != index) {
+			ActorController next = ActorController.instances[i];
+			if (next.Alive) return next;
+			i = (index + 1) % ActorController.instances.Count;
+		}
+		return ActorController.instances[index];
 	}
 }

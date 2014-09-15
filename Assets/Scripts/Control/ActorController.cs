@@ -7,10 +7,15 @@ public class ActorController : Interactable {
 
 	public int playerID;
 	public Vector3 startPosition;
+	public Quaternion startRotation;
 	public float speed = 1f;
 	public float hitRadius = 1f;
+	public float fieldOfView = 60f;
+	public float viewRange = 5f;
+
 	public LayerMask wallMask;
 	public LineRenderer waypointLines;
+	public LineRenderer fovLines;
 	public GameObject deadModel;
 
 	public bool runningSim = false;
@@ -25,18 +30,28 @@ public class ActorController : Interactable {
 	void Start() {
 		instances.Add(this);
 		startPosition = transform.position;
+		startRotation = transform.rotation;
 		waypointLines.SetPosition(0, transform.position);
 	}
 
 	void Update() {
+		// setup fieldOfView lines
+		float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
+		Vector2 fovPointLeft = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) + fovMod, viewRange);
+		Vector2 fovPointRight = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) - fovMod, viewRange);
+		fovLines.SetPosition(0, transform.position + Utils.Vec2to3(fovPointLeft));
+		fovLines.SetPosition(1, transform.position);
+		fovLines.SetPosition(2, transform.position + Utils.Vec2to3(fovPointRight));
+
 		if (runningSim && targetWaypoint < waypoints.Count) {
-			// we are moving along waypoints
+			// move along waypoints
 			Vector2 targetPosition = Utils.Vec3to2(waypoints[targetWaypoint].transform.position);
 			Vector2 distance = targetPosition - Utils.Vec3to2(transform.position);
 			Vector3 movement = Utils.Vec2to3(distance.normalized * speed * Time.deltaTime);
 
-			transform.LookAt(new Vector3(targetPosition.x, targetPosition.y, transform.position.z), transform.up);
-			Debug.DrawRay(transform.position, transform.up);
+			Utils.LookAt2D(transform, targetPosition);
+
+
 			if (distance.magnitude < movement.magnitude) {
 				// prevent going past the waypoint
 				transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
@@ -96,11 +111,14 @@ public class ActorController : Interactable {
 		alive = true;
 		gameObject.SetActive(true);
 		transform.position = startPosition;
+		transform.rotation = startRotation;
 		targetWaypoint = 0;
 		waypointLines.SetVertexCount(waypoints.Count + 1);
 		waypointLines.SetPosition(0, transform.position);
 		for (int i = 0; i < waypoints.Count; i++) {
-			waypoints[i].renderer.enabled = true;
+			Waypoint w = waypoints[i];
+			w.renderer.enabled = true;
+			w.gameObject.SetActive(true);
 			UpdateWaypointLine(i);
 		}
 	}
@@ -112,6 +130,9 @@ public class ActorController : Interactable {
 	public void Kill(GameObject killer) {
 		alive = false;
 		gameObject.SetActive(false);
+		foreach (Waypoint w in waypoints) {
+			w.gameObject.SetActive(false);
+		}
 		Instantiate(deadModel, transform.position, transform.rotation);
 	}
 
