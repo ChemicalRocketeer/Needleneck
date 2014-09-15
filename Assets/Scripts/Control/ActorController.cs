@@ -44,6 +44,8 @@ public class ActorController : Interactable {
 	}
 
 	void Update() {
+		FindTarget();
+
 		// setup fieldOfView lines
 		float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
 		Vector2 fovPointLeft = Utils.Vec2FromAngle(Utils.AngleOf(Utils.Vec3to2(transform.right)) + fovMod, range);
@@ -149,13 +151,24 @@ public class ActorController : Interactable {
 		Instantiate(deadModel, transform.position, transform.rotation);
 	}
 
+	public bool CanShoot(ActorController ac) {
+		if (ac == null) return false;
+		Vector2 otherPos = Utils.Vec3to2(ac.transform.position - transform.position);
+		float otherAngle = Utils.AngleOf(otherPos) * Mathf.Rad2Deg;
+		float fovMod = fieldOfView * 0.5f;
+		float myAngle = Utils.AngleOf(transform.right) * Mathf.Rad2Deg;
+		return Utils.BetweenAngles(myAngle + fovMod, otherAngle, myAngle - fovMod);
+	}
+
 	private ActorController FindTarget() {
 		Collider[] colliders = Physics.OverlapSphere(transform.position, range, targetMask);
 		foreach (Collider c in colliders) {
-			Vector2 otherPos = Utils.Vec3to2(c.transform.position);
-			float fovMod = fieldOfView * Mathf.Deg2Rad * 0.5f;
-			float myAngle = Utils.AngleOf(Utils.Vec3to2(transform.right));
+			ActorController actor = c.GetComponent<ActorController>();
+			if (CanShoot(actor)) {
+				return actor;
+			}
 		}
+		return null;
 	}
 
 	/// <summary>

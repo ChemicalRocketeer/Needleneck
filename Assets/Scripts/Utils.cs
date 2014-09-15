@@ -34,6 +34,17 @@ public class Utils {
 		return Mathf.Atan2(v.y, v.x) % (2 * Mathf.PI);
 	}
 
+	/// <summary>
+	/// The same as AngleOf(Vector2). This version simply ignores the z component and treats the vector as if it were a Vector2
+	/// </summary>
+	public static float AngleOf(Vector3 v) {
+		return Mathf.Atan2(v.y, v.x) % (2 * Mathf.PI);
+	}
+
+	public static float AngleBetween(Vector2 a, Vector2 b) {
+		return Mathf.Atan2(b.y, b.x) - Mathf.Atan2(a.y, a.x);
+	}
+
 	public static void LookAt2D(Transform transform, Vector2 target) {
 		Vector2 dir = target - Vec3to2(transform.position);
 		float angle = Mathf.Atan2(dir.y,dir.x) * Mathf.Rad2Deg;
@@ -43,4 +54,31 @@ public class Utils {
     public static bool InLayerMask(int layer, int mask) {
         return ((mask >> layer) & 1) == 1;
     }
+
+	public static bool SameSign(float a, float b) {
+		return (a >= 0) == (b >= 0);
+	}
+
+	public static bool BetweenAngles(float a, float between, float b) {
+		a = Angle180(a - between);
+		b = Angle180(b - between);
+		// now check if 0 is between a and b
+		return !SameSign(a, b) && Mathf.Abs(a) + Mathf.Abs(b) <= 180f;
+	}
+	
+	/// <returns>The same angle, between -180 and 180</returns>
+	public static float Angle180(float a) {
+		a %= 360;
+		if (a < -180) return a + 360;
+		if (a > 180) return a - 360;
+		return a;
+	}
+
+	/// <returns>the same angle, converted to be between 0 and 360</returns>
+	public static float AngleNormalize(float a) {
+		if (a < 0) {
+			return (a % 360) + 360;
+		}
+		return a % 360;
+	}
 }
