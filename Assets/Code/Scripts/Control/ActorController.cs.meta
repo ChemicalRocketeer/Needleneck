@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 40a94e217d288f348b2abe53e6fbb684
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - waypointLines: {instanceID: 0}
+  - fovLines: {instanceID: 0}
+  - deadModel: {fileID: 100000, guid: 673ef21b694e072408489f58dd860182, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
