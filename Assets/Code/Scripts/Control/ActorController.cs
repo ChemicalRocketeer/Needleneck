@@ -174,6 +174,7 @@ public class ActorController : Interactable {
 		targetWaypoint = 0;
 		waypointLines.SetVertexCount(waypoints.Count + 1);
 		waypointLines.SetPosition(0, transform.position);
+		aimTimeCounter = 0f;
 		GameObject.Destroy(deadSelf);
 		for (int i = 0; i < waypoints.Count; i++) {
 			Waypoint w = waypoints[i];

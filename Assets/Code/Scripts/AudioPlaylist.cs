@@ -21,7 +21,7 @@ public class AudioPlaylist : MonoBehaviour {
 	}
 
 	void Update() {
-		if (source.time >= source.clip.length + timeDelay) {
+		if (!source.clip || source.time >= source.clip.length) {
 			if (index == shuffled.Length) {
 				Shuffle();
 				index = 0;

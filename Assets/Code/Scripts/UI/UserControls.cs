@@ -20,7 +20,7 @@ public class UserControls : MonoBehaviour {
 
 	void Update () {
 
-		if (Input.GetMouseButtonDown(0)) {
+		if (Input.GetMouseButtonDown(0) && !GUIManager.IsInGUIElement(Input.mousePosition)) {
 
 			if (selected.simState == ActorController.SimStates.DEAD) {
 				selected = ResolveDeadSelectedActor(ActorController.instances.IndexOf(selected));
