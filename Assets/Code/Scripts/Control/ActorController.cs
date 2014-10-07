@@ -83,10 +83,12 @@ public class ActorController : Interactable {
 
 				Utils.LookAt2D(transform, targetPosition);
 
+				Vector3 newPos = transform.position + movement;
+				
+				// prevent going past the waypoint
 				if (distance.magnitude < movement.magnitude) {
-					// prevent going past the waypoint
 					movement = distance;
-					transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
+					newPos = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
 					// adjust waypoint lines
 					waypoints[targetWaypoint].renderer.enabled = false;
 					targetWaypoint += 1;
@@ -95,75 +97,21 @@ public class ActorController : Interactable {
 					for (int i = targetWaypoint; i < waypoints.Count; i++) {
 						UpdateWaypointLine(i);
 					}
-				} else {
-					// prevent running through walls
-					RaycastHit hit;
-					if (Physics.SphereCast(transform.position, hitRadius, movement.normalized, out hit, movement.magnitude, wallMask)) {
-						movement = Vector3.zero;
-					}
 				}
-				transform.position = transform.position + movement;
+
+				// prevent running through walls
+				RaycastHit hit;
+				if (Physics.SphereCast(transform.position, hitRadius, movement.normalized, out hit, movement.magnitude, wallMask)) {
+					movement = Vector3.zero;
+					newPos = transform.position;
+				}
+
+				transform.position = newPos;
 			}
 		}
 
 		// adjust position with line renderer
 		waypointLines.SetPosition(0, transform.position);
-	}
-
-	public void MakeWaypoint(Vector2 position) {
-		Vector3 pos = Utils.PutOnGround(position, transform.position.z);
-		Vector3 lastPos;
-		if (waypoints.Count > 0) {
-			lastPos = waypoints[waypoints.Count - 1].transform.position;
-		} else {
-			lastPos = transform.position;
-		}
-		// if the path to the new waypoint goes through any walls, put the waypoint on the near side of the wall instead
-		Vector3 dist = pos - lastPos;
-		RaycastHit hit;
-		if (Physics.SphereCast(lastPos, hitRadius, dist.normalized, out hit, dist.magnitude, wallMask)) {
-			return;
-			/*
-			Vector3 pointVec = hit.point - lastPos;
-			if (Physics.Raycast(lastPos, pointVec.normalized, out hit, pointVec.magnitude * 2, wallMask)) {
-				Vector3 radiusOffset = hit.normal * hitRadius;
-				radiusOffset = Vector3.Project(radiusOffset, dist.normalized);
-				pos = hit.point + radiusOffset;
-			}
-			 */
-		}
-		// instantiate waypoint and setup its state
-		Waypoint w = (Waypoint) Instantiate(waypointPrefab, pos, Quaternion.identity);
-		w.actorController = this;
-		AddWaypoint(w);
-	}
-	
-	public void AddWaypoint(Waypoint w) {
-		waypoints.Add(w);
-		waypointLines.SetVertexCount(GetWaypointLineVertexCount());
-		UpdateWaypointLine(waypoints.Count - 1);
-	}
-
-	public void RemoveWaypoint(Waypoint w) {
-		RemoveWaypoint(waypoints.IndexOf(w));
-	}
-
-	public void RemoveWaypoint() {
-		if (waypoints.Count > 0) {
-			RemoveWaypoint(waypoints.Count - 1);
-		}
-	}
-	
-	public void RemoveWaypoint(int index) {
-		GameObject.Destroy(waypoints[index].gameObject);
-		waypoints.RemoveAt(index);
-		if (targetWaypoint > waypoints.Count) {
-			targetWaypoint = waypoints.Count;
-		}
-		waypointLines.SetVertexCount(GetWaypointLineVertexCount());
-		for (; index < waypoints.Count; index ++) {
-			UpdateWaypointLine(index);
-		}
 	}
 
 	public void ResetSimulation() {
@@ -182,10 +130,6 @@ public class ActorController : Interactable {
 			w.gameObject.SetActive(true);
 			UpdateWaypointLine(i);
 		}
-	}
-	
-	public void UpdateWaypointLine(Waypoint w) {
-		UpdateWaypointLine(waypoints.IndexOf(w));
 	}
 
 	public void FireBullet() {
@@ -238,6 +182,58 @@ public class ActorController : Interactable {
 			}
 		}
 		return null;
+	}
+	
+	public void MakeWaypoint(Vector2 position) {
+		Vector3 pos = Utils.PutOnGround(position, transform.position.z);
+		Vector3 lastPos;
+		if (waypoints.Count > 0) {
+			lastPos = waypoints[waypoints.Count - 1].transform.position;
+		} else {
+			lastPos = transform.position;
+		}
+		// if the path to the new waypoint goes through any walls, put the waypoint on the near side of the wall instead
+		Vector3 dist = pos - lastPos;
+		RaycastHit hit;
+		if (Physics.SphereCast(lastPos, hitRadius, dist.normalized, out hit, dist.magnitude, wallMask)) {
+			return;
+		}
+		// instantiate waypoint and setup its state
+		Waypoint w = (Waypoint) Instantiate(waypointPrefab, pos, Quaternion.identity);
+		w.actorController = this;
+		AddWaypoint(w);
+	}
+	
+	public void AddWaypoint(Waypoint w) {
+		waypoints.Add(w);
+		waypointLines.SetVertexCount(GetWaypointLineVertexCount());
+		UpdateWaypointLine(waypoints.Count - 1);
+	}
+	
+	public void RemoveWaypoint(Waypoint w) {
+		RemoveWaypoint(waypoints.IndexOf(w));
+	}
+	
+	public void RemoveWaypoint() {
+		RemoveWaypoint(waypoints.Count - 1);
+	}
+	
+	public void RemoveWaypoint(int index) {
+		if (waypoints.Count > 0 && index > 0 && index < waypoints.Count) {
+			GameObject.Destroy(waypoints[index].gameObject);
+			waypoints.RemoveAt(index);
+			if (targetWaypoint > waypoints.Count) {
+				targetWaypoint = waypoints.Count;
+			}
+			waypointLines.SetVertexCount(GetWaypointLineVertexCount());
+			for (; index < waypoints.Count; index ++) {
+				UpdateWaypointLine(index);
+			}
+		}
+	}
+	
+	public void UpdateWaypointLine(Waypoint w) {
+		UpdateWaypointLine(waypoints.IndexOf(w));
 	}
 
 	/// <summary>
