@@ -15,7 +15,7 @@ public class ServerManager : MonoBehaviour {
 
 	void Start() {
 		if (serverCreationButton == new Rect(0, 0, 0, 0)) {
-			serverCreationButton = new Rect(Screen.width * 0.02f, Screen.width * 0.02f, 100f, 40f);
+			serverCreationButton = new Rect(Screen.width * 0.02f, Screen.width * 0.02f, 100f, 100f);
 		}
 		GUIManager.AddGUIElement(serverCreationButton);
 	}

@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Waypoint : Interactable {
 
-	public ActorController actorController;
+	public Actor actorController;
 
 	public override void OnClick()
 	{

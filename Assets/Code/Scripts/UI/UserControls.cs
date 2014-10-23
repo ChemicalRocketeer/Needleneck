@@ -4,11 +4,13 @@ using System.Collections;
 public class UserControls : MonoBehaviour {
 
 	public int playerID = 0;
-	public ActorController selected;
+	public Actor selected;
 	public LayerMask interactableMask;
 
 	public float normalTimeScale = 1f;
 	public float slowTimeScale = .2f;
+
+	public Vector2 menuButtonSize = new Vector2(100, 20);
 
 	private SimulationStates simState;
 
@@ -20,10 +22,17 @@ public class UserControls : MonoBehaviour {
 
 	void Update () {
 
+		if (selected != null) {
+			Vector2 selPos = Utils.Vec3to2(selected.transform.position);
+			if (GUI.Button(new Rect(selPos.x + 10, selPos.y - 10, menuButtonSize.x, menuButtonSize.y), "Aim")) {
+				selected.
+			}
+		}
+
 		if (Input.GetMouseButtonDown(0) && !GUIManager.IsInGUIElement(Input.mousePosition)) {
 
-			if (selected.simState == ActorController.SimStates.DEAD) {
-				selected = ResolveDeadSelectedActor(ActorController.instances.IndexOf(selected));
+			if (selected.simState == Actor.SimStates.DEAD) {
+				selected = ResolveDeadSelectedActor(Actor.instances.IndexOf(selected));
 			}
 
 			Vector3 groundPoint = Input.mousePosition;
@@ -37,7 +46,7 @@ public class UserControls : MonoBehaviour {
 
 			if (Physics.Raycast(ray, out hit, Mathf.Infinity, interactableMask)) { 
 				// interact with something
-				ActorController actor = hit.transform.GetComponent<ActorController>();
+				Actor actor = hit.transform.GetComponent<Actor>();
 				if (actor != null) {
 					actor.OnClick();
 					selected = actor;
@@ -70,14 +79,14 @@ public class UserControls : MonoBehaviour {
 		} else {
 			simState = SimulationStates.PAUSED;
 		}
-		foreach (ActorController c in ActorController.instances) {
+		foreach (Actor c in Actor.instances) {
 			c.runningSim = runningSim;
 		}
 	}
 
 	public void ResetSimulation() {
 		simState = SimulationStates.PLANNING_MODE;
-		foreach (ActorController c in ActorController.instances) {
+		foreach (Actor c in Actor.instances) {
 			c.runningSim = false;
 			c.ResetSimulation();
 		}
@@ -91,13 +100,13 @@ public class UserControls : MonoBehaviour {
 		}
 	}
 
-	private ActorController ResolveDeadSelectedActor(int index) {
-		int i = (index + 1) % ActorController.instances.Count;
+	private Actor ResolveDeadSelectedActor(int index) {
+		int i = (index + 1) % Actor.instances.Count;
 		while (i != index) {
-			ActorController next = ActorController.instances[i];
-			if (next.simState != ActorController.SimStates.DEAD) return next;
-			i = (index + 1) % ActorController.instances.Count;
+			Actor next = Actor.instances[i];
+			if (next.simState != Actor.SimStates.DEAD) return next;
+			i = (index + 1) % Actor.instances.Count;
 		}
-		return ActorController.instances[index];
+		return Actor.instances[index];
 	}
 }

@@ -17,7 +17,7 @@ public class Bullet : MonoBehaviour {
 			movement = hit.point - transform.position;
 			velocity = Vector2.zero;
 			//GameObject.Destroy(gameObject);
-			ActorController ac = hit.collider.GetComponent<ActorController>();
+			Actor ac = hit.collider.GetComponent<Actor>();
 			if (ac && ac.teamID != teamID) {
 				ac.Kill(source);
 			}
